@@ -4,13 +4,15 @@ import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { User } from './user';
 import cors from 'cors'
+import { GraphqlContext } from '../interfaces';
+import JWTService from '../services/jwt';
 export async function initServer() {
-    const app = express();
+  const app = express();
 
-    app.use(bodyParser.json())
-    app.use(cors())
-    const graphqlServer = new ApolloServer({
-        typeDefs: `
+  app.use(bodyParser.json())
+  app.use(cors())
+  const graphqlServer = new ApolloServer<GraphqlContext>({
+    typeDefs: `
            ${User.types}
     
             type Query {
@@ -18,44 +20,54 @@ export async function initServer() {
             }
     
         `,
-        resolvers: {
-          Query: {
-            ...User.resolvers.queries,
-          },
-       
-        },
-      });
-    // const graphqlServer = new ApolloServer({
-    //     typeDefs: `
-    //         ${User.types}
-    //             type Query {
-    //                 ${User.queries}
-    //             } 
-    //         `,
-    //     resolvers: {
-    //         Query: {
-    //             ...User.resolvers.queries,
-    //         },
-    //     },
-    // });
-    // const graphqlServer = new ApolloServer({
-    //     typeDefs: `
-    //         type Query {
-    //             sayHello: String
-    //         }
-    //     `,
-    //     resolvers: {
-    //         Query: {
-    //             sayHello: () => 'Hello from Graphql Server'
-    //         },
-    //         // Muatation:{},
-    //     },
-    // });
+    resolvers: {
+      Query: {
+        ...User.resolvers.queries,
+      },
 
-    await graphqlServer.start();
+    },
+  });
+  // const graphqlServer = new ApolloServer({
+  //     typeDefs: `
+  //         ${User.types}
+  //             type Query {
+  //                 ${User.queries}
+  //             } 
+  //         `,
+  //     resolvers: {
+  //         Query: {
+  //             ...User.resolvers.queries,
+  //         },
+  //     },
+  // });
+  // const graphqlServer = new ApolloServer({
+  //     typeDefs: `
+  //         type Query {
+  //             sayHello: String
+  //         }
+  //     `,
+  //     resolvers: {
+  //         Query: {
+  //             sayHello: () => 'Hello from Graphql Server'
+  //         },
+  //         // Muatation:{},
+  //     },
+  // });
 
-    app.use('/graphql', expressMiddleware(graphqlServer));
+  await graphqlServer.start();
 
-    return app;
+  app.use('/graphql', expressMiddleware(graphqlServer, {
+    context: async ({ req, res }) => {
+      return {
+        user: req.headers.authorization
+          ? JWTService.decodeToken(
+            req.headers.authorization.split('Bearer ')[1]
+          )
+          : undefined,
+      };
+    },
+  }));
+
+  return app;
 }
 

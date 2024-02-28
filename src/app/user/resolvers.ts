@@ -6,6 +6,7 @@ import { PrismaClient } from "@prisma/client";
 // import { GraphqlContext } from "../../intefaces";
 import { User } from "@prisma/client";
 import { prismaClient } from "../../clients/db";
+import { GraphqlContext } from "../../interfaces";
 // import UserService from "../../services/user";
 // import { redisClient } from "../../clients/redis";
 
@@ -90,6 +91,15 @@ const queries = {
         return userToken;
     }
 
+    , getCurrentUser: async (parent: any, args: any, ctx: GraphqlContext) => {
+        console.log("ctx", ctx)
+        const id = ctx?.user?.id
+        if (!id) return null
+
+        const user = await prismaClient.user.findUnique({ where: { id } })
+        return user
+        // return ctx.user
+    }
 }
 export const resolvers = { queries };
 
