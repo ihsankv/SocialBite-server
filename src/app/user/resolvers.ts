@@ -101,9 +101,15 @@ const queries = {
         // return ctx.user
     }
 }
-export const resolvers = { queries };
 
+const extraResolvers = {
+    User: {
+        tweets: (parent: User) => prismaClient.tweet.findMany({ where: { author: { id: parent.id } } })
+        // author: (parent: Tweet) => UserService.getUserById(parent.authorId),
+    },
+};
 
+export const resolvers = { queries, extraResolvers };
 
 // const queries = {
 //     verifyGoogleToken: async (parent: any, { token }: { token: string }) => {
