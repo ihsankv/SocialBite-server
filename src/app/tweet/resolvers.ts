@@ -11,8 +11,8 @@ import { GraphqlContext } from "../../interfaces";
 
 // const s3Client = new S3Client({
 //   region: process.env.AWS_DEFAULT_REGION,
-// });
-
+// }); // fixed
+ 
 const queries = {
   getAllTweets: () => prismaClient.tweet.findMany({ orderBy: { createdAt: "desc" } })
   // //   getSignedURLForTweet: async (
