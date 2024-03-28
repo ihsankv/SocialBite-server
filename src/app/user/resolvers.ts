@@ -49,6 +49,51 @@ const extraResolvers = {
             });
             return result.map((el) => el.following);
           },
+          recommendedUsers: async (parent: User, _: any, ctx: GraphqlContext) => {
+            if (!ctx.user) return [];
+            // const cachedValue = await redisClient.get(
+            //   `RECOMMENDED_USERS:${ctx.user.id}`
+            // );
+      
+            // if (cachedValue) {
+            //   console.log("Cache Found");
+            //   return JSON.parse(cachedValue);
+            // }
+      
+            const myFollowings = await prismaClient.follows.findMany({
+              where: {
+                follower: { id: ctx.user.id },
+              },
+              include: {
+                following: {
+                  include: { followers: { include: { following: true } } },
+                },
+              },
+            });
+      
+            const users: User[] = [];
+      
+            for (const followings of myFollowings) {
+              for (const followingOfFollowedUser of followings.following.followers) {
+                if (
+                  followingOfFollowedUser.following.id !== ctx.user.id &&
+                  myFollowings.findIndex(
+                    (e) => e?.followingId === followingOfFollowedUser.following.id
+                  ) < 0
+                ) {
+                  users.push(followingOfFollowedUser.following);
+                }
+              }
+            }
+      
+            console.log("Cache Not Found");
+            // await redisClient.set(
+            //   `RECOMMENDED_USERS:${ctx.user.id}`,
+            //   JSON.stringify(users)
+            // );
+      
+            return users;
+          },
         // author: (parent: Tweet) => UserService.getUserById(parent.authorId),
     },
 };
