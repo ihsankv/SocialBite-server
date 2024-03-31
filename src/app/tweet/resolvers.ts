@@ -1,9 +1,10 @@
-import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
+// import { S3Client, GetObjectCommand } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { Tweet } from "@prisma/client";
 import { GraphqlContext } from "../../interfaces";
 import UserService from "../../services/user";
 import TweetService, { CreateTweetPayload } from "../../services/tweet";
+import { GetObjectCommand, S3Client } from "@aws-sdk/client-s3";
 
 const s3Client = new S3Client({
   region: process.env.AWS_DEFAULT_REGION,
